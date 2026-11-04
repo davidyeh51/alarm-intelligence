@@ -1,0 +1,24 @@
+name: Hourly alarm synchronization
+on:
+  schedule:
+    # 07:00–17:00 Asia/Taipei, every day (UTC+08).
+    - cron: '0 0-9,23 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: alarm-hourly-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: ${{ vars.ALARM_SYNC_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Import the current source snapshot
+        env:
+          ALARM_SOURCE_USERNAME: ${{ secrets.ALARM_SOURCE_USERNAME }}
+          ALARM_SOURCE_PASSWORD: ${{ secrets.ALARM_SOURCE_PASSWORD }}
+          ALARM_SYNC_TOKEN: ${{ secrets.ALARM_SYNC_TOKEN }}
+        run: node scripts/sync-alarms.cjs
